@@ -1,4 +1,6 @@
 global:
+  external_labels:
+    site: prod
   scrape_interval: 5s
   evaluation_interval: 5s
 
@@ -45,3 +47,5 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: 127.0.0.1:9115
+remote_write:
+  - url: http://localhost:8428/api/v1/write
