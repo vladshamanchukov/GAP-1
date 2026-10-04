@@ -38,3 +38,28 @@ Alertmanager :9093 <- receives alerts from Prometheus
 - curl -s http://localhost:9090/-/healthy
 - curl -s http://localhost:9093/-/healthy
 - curl -s http://localhost:9115/-/healthy
+
+
+
+GAP-1 #2: Prometheus + Alertmanager + Blackbox + VictoriaMetrics
+
+## Что сделано :
+- VictoriaMetrics установлена как долговременное хранилище метрик
+- Retention: 14 дней
+- Prometheus пишет метрики в VictoriaMetrics через remote_write
+- Адрес записи: http://localhost:8428/api/v1/write
+- Все метрики получают лейбл site: prod
+
+## Файлы в репозитории:
+- prometheus.yml — конфиг Prometheus (scrape + remote_write + external_labels)
+- victoriametrics.service — systemd-юнит с retention 14d
+- alertmanager.yml — конфиг Alertmanager
+- alerts.yml — правила алертов
+- blackbox.yml — конфиг Blackbox Exporter
+- prometheus.service, alertmanager.service, blackbox_exporter.service — юниты
+
+## Как проверить:
+- Открыть http://10.0.2.15:8428/vmui/ — это UI VictoriaMetrics
+- Ввести запрос probe_success{site="prod"} — должно вернуть 1 
+- Открыть http://10.0.2.15:9090/targets — все таргеты UP
+- Открыть http://10.0.2.15:9093 — Alertmanager
