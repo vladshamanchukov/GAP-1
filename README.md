@@ -63,3 +63,40 @@ GAP-1 #2: Prometheus + Alertmanager + Blackbox + VictoriaMetrics
 - Ввести запрос probe_success{site="prod"} — должно вернуть 1 
 - Открыть http://10.0.2.15:9090/targets — все таргеты UP
 - Открыть http://10.0.2.15:9093 — Alertmanager
+
+
+## Алертинг (Alertmanager)
+
+Alertmanager отправляет email-уведомления через SMTP Яндекса.
+Маршрутизация зависит от severity алерта.
+
+### Каналы оповещения
+
+- critical → shamanchukov+critical@yandex.ru
+- warning  → shamanchukov+warning@yandex.ru
+
+### Маршрутизация
+
+В alertmanager.yml два дочерних маршрута:
+
+- severity = "critical" → receiver email-critical
+- severity = "warning"  → receiver email-warning
+
+### Правила алертов (alerts.yml)
+
+- CMSSiteDown (critical): probe_success{job="blackbox"} == 0 дольше 30 секунд
+- CMSSlowResponse (warning): probe_duration_seconds{job="blackbox"} > 0.5 дольше 1 минуты
+
+### SMTP
+
+- Сервер: smtp.yandex.ru:465
+- TLS: включён (порт 465 — SMTPS)
+- Аутентификация: пароль приложения
+  (в репозитории замаскирован как REPLACE_WITH_APP_PASSWORD)
+
+### Как проверить
+
+- amtool alert add test_critical severity=critical alertname=TestCritical
+- amtool alert add test_warning severity=warning alertname=TestWarning
+- Письма приходят на разные адреса: +critical и +warning
+
