@@ -1,14 +1,40 @@
 global:
   resolve_timeout: 5m
+  smtp_smarthost: 'smtp.yandex.ru:465'
+  smtp_from: 'shamanchukov@yandex.ru'
+  smtp_auth_username: 'shamanchukov@yandex.ru'
+  smtp_auth_password: 'REPLACE_WITH_APP_PASSWORD'
+  smtp_require_tls: false
 
 route:
-  receiver: 'default'
+  receiver: 'email-warning'
+  group_by: ['alertname', 'severity']
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  routes:
+    - matchers:
+        - severity = "critical"
+      receiver: 'email-critical'
+      group_wait: 0s
+      repeat_interval: 1h
+
+    - matchers:
+        - severity = "warning"
+      receiver: 'email-warning'
 
 receivers:
-  - name: 'default'
+  - name: 'email-critical'
     email_configs:
-      - to: 'admin@example.com'
-        from: 'alertmanager@example.com'
-        smarthost: 'smtp.example.com:587'
-        auth_username: 'alertmanager@example.com'
-        auth_password: 'password'
+      - to: 'shamanchukov+critical@yandex.ru'
+        send_resolved: true
+        headers:
+          Subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+
+  - name: 'email-warning'
+    email_configs:
+      - to: 'shamanchukov+warning@yandex.ru'
+        send_resolved: true
+        headers:
+          Subject: '[WARNING] {{ .GroupLabels.alertname }}'

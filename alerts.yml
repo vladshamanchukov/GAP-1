@@ -9,3 +9,12 @@ groups:
         annotations:
           summary: "CMS down"
           description: "Blackbox cannot reach the site for more than 30 seconds."
+
+      - alert: CMSSlowResponse
+        expr: probe_duration_seconds{job="blackbox"} > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CMS responds slowly"
+          description: "CMS response time exceeds 0.5 seconds for more than 1 minute."
